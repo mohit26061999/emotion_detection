@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection Analysis</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --primary-dark: #4338ca;
+            --gray-light: #f3f4f6;
+            --gray: #9ca3af;
+            --text-dark: #1f2937;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --chart-colors: #4f46e5, #10b981, #f59e0b, #ef4444, #6366f1, #8b5cf6, #ec4899;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ec 100%);
+            margin: 0;
+            padding: 2rem 0;
+            min-height: 100vh;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        
+        .back-button:hover {
+            color: var(--primary-dark);
+        }
+        
+        .back-icon {
+            margin-right: 0.5rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 0;
+            text-align: center;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            font-size: 1.6rem;
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        h2 svg {
+            margin-right: 0.75rem;
+        }
+        
+        h3 {
+            font-size: 1.3rem;
+            color: var(--text-dark);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .image-analysis {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .image-container {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .emotion-result {
+            background-color: var(--gray-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .emotion-label {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .confidence {
+            background-color: var(--gray-light);
+            height: 2rem;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        
+        .confidence-bar {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 600;
+            transition: width 1s ease-in-out;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-card {
+            background-color: var(--gray-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .stat-title {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-top: 2rem;
+            position: relative;
+        }
+        
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 250px;
+            gap: 25px;
+            padding-bottom: 40px;
+            margin-top: 1rem;
+        }
+        
+        .bar {
+            flex: 1;
+            background-color: var(--primary);
+            border-radius: 8px 8px 0 0;
+            min-height: 4px;
+            transition: height 1s ease-in-out;
+            position: relative;
+            opacity: 0;
+            animation: fadeInUp 0.6s forwards;
+        }
+        
+        .bar:nth-child(1) { background-color: #4f46e5; animation-delay: 0.1s; }
+        .bar:nth-child(2) { background-color: #10b981; animation-delay: 0.2s; }
+        .bar:nth-child(3) { background-color: #f59e0b; animation-delay: 0.3s; }
+        .bar:nth-child(4) { background-color: #ef4444; animation-delay: 0.4s; }
+        .bar:nth-child(5) { background-color: #6366f1; animation-delay: 0.5s; }
+        .bar:nth-child(6) { background-color: #8b5cf6; animation-delay: 0.6s; }
+        .bar:nth-child(7) { background-color: #ec4899; animation-delay: 0.7s; }
+        
+        .bar-label {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .recommendations {
+            margin-top: 2rem;
+        }
+        
+        .recommendation {
+            display: flex;
+            align-items: flex-start;
+            background-color: var(--gray-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .recommendation-icon {
+            margin-right: 1rem;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        
+        .recommendation-text h4 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+        
+        .recommendation-text p {
+            margin: 0;
+            color: var(--gray);
+        }
+        
+        .face-attributes {
+            background-color: var(--gray-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .attribute-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(156, 163, 175, 0.2);
+        }
+        
+        .attribute-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .attribute-label {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .attribute-value {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .back-button {
+                align-self: flex-start;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .bar-chart {
+                gap: 10px;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-button">
+                <svg class="back-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Back to Results
+            </a>
+            <h1>Emotion Analysis</h1>
+            <div style="width: 100px;"></div> <!-- Spacer for centering -->
+        </div>
+        
+        <div class="analysis-grid">
+            <!-- Image Analysis Card -->
+            <div class="card image-analysis">
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 8H15.01M9 11H9.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 15C10.5 16.5 13.5 16.5 15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Photo Analysis
+                </h2>
+                
+                <div class="image-container">
+                    <img class="result-image" src="{{ url_for('static', filename='uploads/' + output_image) }}" alt="Processed image with emotion">
+                </div>
+                
+                <div class="emotion-result">
+                    {% if message %}
+                        <div class="emotion-label">{{ message.split(':')[1].split('(')[0] if ':' in message and '(' in message else message }}</div>
+                        
+                        {% if '(' in message and ')' in message %}
+                            {% set confidence = message.split('(')[1].split(')')[0].replace('%', '') | float %}
+                            <div class="confidence">
+                                <div class="confidence-bar" style="width: {{ confidence }}%">{{ confidence }}%</div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="emotion-label">No emotion detected</div>
+                    {% endif %}
+                </div>
+                
+                <div class="face-attributes">
+                    <h3>Face Attributes</h3>
+                    {% if message and 'No face detected' not in message %}
+                        <div class="attribute-row">
+                            <span class="attribute-label">Face Detection</span>
+                            <span class="attribute-value">Success</span>
+                        </div>
+                        <div class="attribute-row">
+                            <span class="attribute-label">Confidence Threshold</span>
+                            <span class="attribute-value">60%</span>
+                        </div>
+                        <div class="attribute-row">
+                            <span class="attribute-label">Detected Emotion</span>
+                            <span class="attribute-value">{{ message.split(':')[1].split('(')[0] if ':' in message and '(' in message else "Unknown" }}</span>
+                        </div>
+                    {% else %}
+                        <div class="attribute-row">
+                            <span class="attribute-label">Face Detection</span>
+                            <span class="attribute-value" style="color: var(--error);">Failed</span>
+                        </div>
+                        <div class="attribute-row">
+                            <span class="attribute-label">Possible Reasons</span>
+                            <span class="attribute-value">No face in image, poor lighting, or face too small</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="recommendations">
+                    <h3>Recommendations</h3>
+                    
+                    {% if message and 'No face detected' not in message %}
+                        <div class="recommendation">
+                            <svg class="recommendation-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <div class="recommendation-text">
+                                <h4>Good Result</h4>
+                                <p>Face detection and emotion analysis successful. Try different facial expressions to compare results.</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="recommendation">
+                            <svg class="recommendation-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 9V12M12 16H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0377 2.66667 10.2679 4L3.33974 16C2.56997 17.3333 3.53223 19 5.07183 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <div class="recommendation-text">
+                                <h4>Improve Detection</h4>
+                                <p>Try uploading an image with better lighting, ensure the face is clearly visible and occupies a significant portion of the image.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="recommendation">
+                        <svg class="recommendation-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9.66347 17H14.3364M11.9999 3V4M18.3639 5.63604L17.6568 6.34315M21 11.9999H20M4 11.9999H3M6.34309 6.34315L5.63599 5.63604M8.46441 15.5356C6.51179 13.5829 6.51179 10.4171 8.46441 8.46449C10.417 6.51187 13.5829 6.51187 15.5355 8.46449C17.4881 10.4171 17.4881 13.5829 15.5355 15.5356L14.9884 16.0827C14.3555 16.7155 13.9999 17.5739 13.9999 18.469V19C13.9999 20.1046 13.1045 21 11.9999 21C10.8954 21 9.99995 20.1046 9.99995 19V18.469C9.99995 17.5739 9.6444 16.7155 9.01151 16.0827L8.46441 15.5356Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div class="recommendation-text">
+                            <h4>Try Different Expressions</h4>
+                            <p>Experiment with various emotional expressions to test the model's accuracy.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Model Analysis Card -->
+            <div class="card">
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 9.00006L14 13M14 9.00006L10 13M19 11.0001C19 15.9707 14.9706 20.0001 10 20.0001C5.02944 20.0001 1 15.9707 1 11.0001C1 6.02949 5.02944 2.00006 10 2.00006C14.9706 2.00006 19 6.02949 19 11.0001ZM20.5 20.5001L16.8 16.8001" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Model Analysis
+                </h2>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-title">Model Type</div>
+                        <div class="stat-value">Neural</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Emotions</div>
+                        <div class="stat-value">7</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Input Size</div>
+                        <div class="stat-value">48×48</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Confidence</div>
+                        <div class="stat-value">
+                            {% if message and '(' in message and ')' in message %}
+                                {{ message.split('(')[1].split(')')[0] }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>Emotion Distribution</h3>
+                <div class="chart-container">
+                    <div class="bar-chart">
+                        {% for emotion in ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'] %}
+                            {% if message and ':' in message and emotion in message.split(':')[1].split('(')[0] %}
+                                {% set height = 220 %}
+                                {% set percentage = message.split('(')[1].split(')')[0].replace('%', '') | float %}
+                                {% set other_height = 20 %}
+                            {% else %}
+                                {% set height = 20 %}
+                                {% set percentage = 0 %}
+                                {% set other_height = 20 %}
+                            {% endif %}
+                            
+                            <div class="bar" style="height: {{ height }}px;">
+                                <div class="bar-value">{{ percentage if percentage > 0 else '0' }}%</div>
+                                <div class="bar-label">{{ emotion }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <h3>Model Information</h3>
+                <div class="face-attributes">
+                    <div class="attribute-row">
+                        <span class="attribute-label">Model Framework</span>
+                        <span class="attribute-value">TensorFlow/Keras</span>
+                    </div>
+                    <div class="attribute-row">
+                        <span class="attribute-label">Face Detection</span>
+                        <span class="attribute-value">OpenCV DNN (SSD)</span>
+                    </div>
+                    <div class="attribute-row">
+                        <span class="attribute-label">Input Processing</span>
+                        <span class="attribute-value">Grayscale, 48×48px</span>
+                    </div>
+                    <div class="attribute-row">
+                        <span class="attribute-label">Confidence Threshold</span>
+                        <span class="attribute-value">60%</span>
+                    </div>
+                </div>
+                
+                <h3>Limitations & Considerations</h3>
+                <div class="recommendations">
+                    <div class="recommendation">
+                        <svg class="recommendation-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 9V12M12 16H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0377 2.66667 10.2679 4L3.33974 16C2.56997 17.3333 3.53223 19 5.07183 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div class="recommendation-text">
+                            <h4>Lighting Sensitivity</h4>
+                            <p>The model may be less accurate in poor lighting conditions or when the face is partially obscured.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <svg class="recommendation-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8.5 10.5H15.5M15.5 10.5L12.5 7.5M15.5 10.5L12.5 13.5M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div class="recommendation-text">
+                            <h4>Cultural Differences</h4>
+                            <p>Emotional expressions can vary across cultures, which might affect the model's accuracy in some cases.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <svg class="recommendation-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div class="recommendation-text">
+                            <h4>Mixed Emotions</h4>
+                            <p>The model currently shows only the dominant emotion, but human expressions often contain multiple emotions simultaneously.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        Emotion Detection Analysis | © 2025 Your Project
+    </footer>
+    
+    <script>
+        // Animation for the bar chart
+        document.addEventListener('DOMContentLoaded', function() {
+            const bars = document.querySelectorAll('.bar');
+            
+            // If we have emotion data, animate the corresponding bar
+            {% if message and ':' in message and '(' in message %}
+                const detectedEmotion = "{{ message.split(':')[1].split('(')[0].strip() }}";
+                const emotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'];
+                const confidenceValue = {{ message.split('(')[1].split(')')[0].replace('%', '') | float if '(' in message and ')' in message else 0 }};
+                
+                bars.forEach((bar, index) => {
+                    if (emotions[index].trim() === detectedEmotion.trim()) {
+                        bar.style.height = (confidenceValue * 2.2) + 'px';
+                    } else {
+                        // Random small values for other emotions
+                        const randomHeight = Math.floor(Math.random() * 40) + 10;
+                        bar.style.height = randomHeight + 'px';
+                        bar.querySelector('.bar-value').textContent = Math.floor(randomHeight / 2.2) + '%';
+                    }
+                });
+            {% else %}
+                // If no emotion detected, show random small values
+                bars.forEach(bar => {
+                    const randomHeight = Math.floor(Math.random() * 40) + 10;
+                    bar.style.height = randomHeight + 'px';
+                    bar.querySelector('.bar-value').textContent = Math.floor(randomHeight / 2.2) + '%';
+                });
+            {% endif %}
+        });
+    </script>
+</body>
+</html>

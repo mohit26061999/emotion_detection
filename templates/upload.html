@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --primary-dark: #4338ca;
+            --gray-light: #f3f4f6;
+            --gray: #9ca3af;
+            --text-dark: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ec 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+
+        p {
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+
+        .upload-container {
+            border: 2px dashed var(--gray);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-container:hover {
+            border-color: var(--primary);
+            background-color: var(--gray-light);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            fill: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-label {
+            font-weight: 600;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-hint {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .file-selected {
+            margin-top: 1rem;
+            font-weight: 500;
+            color: var(--primary-dark);
+            display: none;
+        }
+
+        .submit-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+
+        .submit-btn:disabled {
+            background-color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .emotion-icons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .emotion-icon {
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .emotion-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .preview-container {
+            margin-top: 1.5rem;
+            display: none;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            .upload-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0zm0 22c-5.514 0-10-4.486-10-10S6.486 2 12 2s10 4.486 10 10-4.486 10-10 10zm-1-13.5C11 7.672 10.328 7 9.5 7S8 7.672 8 8.5 8.672 10 9.5 10s1.5-.672 1.5-1.5zm6 0c0-.828-.672-1.5-1.5-1.5s-1.5.672-1.5 1.5.672 1.5 1.5 1.5 1.5-.672 1.5-1.5zM12 18c3.14 0 5.74-2.27 6.27-5.25H5.73C6.26 15.73 8.86 18 12 18z"/>
+            </svg>
+        </div>
+        <h1>Emotion Detection</h1>
+        <p>Upload a facial image and let our AI detect the emotion being expressed</p>
+
+        <div class="emotion-icons">
+            <span class="emotion-icon">😀</span>
+            <span class="emotion-icon">😢</span>
+            <span class="emotion-icon">😡</span>
+            <span class="emotion-icon">😮</span>
+            <span class="emotion-icon">😐</span>
+        </div>
+
+        <form method="POST" action="/predict" enctype="multipart/form-data" id="upload-form">
+            <div class="upload-container" id="upload-area">
+                <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                </svg>
+                <span class="file-label">Choose an image file or drag it here</span>
+                <span class="file-hint">JPG, PNG or GIF up to 5MB</span>
+                <input type="file" name="image" accept="image/*" required class="file-input" id="file-input">
+                <div class="file-selected" id="file-selected">No file selected</div>
+            </div>
+
+            <div class="preview-container" id="preview-container">
+                <img id="image-preview" class="image-preview" src="" alt="Image preview">
+            </div>
+
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>Detect Emotion</button>
+        </form>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const fileSelected = document.getElementById('file-selected');
+        const previewContainer = document.getElementById('preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const submitBtn = document.getElementById('submit-btn');
+        const uploadArea = document.getElementById('upload-area');
+
+        fileInput.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                fileSelected.textContent = file.name;
+                fileSelected.style.display = 'block';
+
+                submitBtn.disabled = false;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                resetForm();
+            }
+        });
+
+        uploadArea.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--primary)';
+            this.style.backgroundColor = 'var(--gray-light)';
+        });
+
+        uploadArea.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--gray)';
+            this.style.backgroundColor = 'white';
+        });
+
+        uploadArea.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--gray)';
+            this.style.backgroundColor = 'white';
+
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                fileInput.files = e.dataTransfer.files;
+
+                const file = e.dataTransfer.files[0];
+                fileSelected.textContent = file.name;
+                fileSelected.style.display = 'block';
+
+                submitBtn.disabled = false;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function resetForm() {
+            fileSelected.textContent = 'No file selected';
+            fileSelected.style.display = 'none';
+            previewContainer.style.display = 'none';
+            submitBtn.disabled = true;
+        }
+    </script>
+</body>
+</html>
