@@ -1,0 +1,8 @@
+venv/
+*.keras
+*.pyd
+*.dll
+*.lib
+*.h5
+*.pt
+*.pb
