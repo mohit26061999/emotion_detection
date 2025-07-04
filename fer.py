@@ -14,14 +14,10 @@ from keras.layers import Dense,Input,Dropout,GlobalAveragePooling2D,Flatten,Conv
 from keras.models import Model,Sequential
 from tensorflow.keras.optimizers import Adam,SGD,RMSprop
 picture_size = 48
-# folder_path = "../input/ckplus/CK+48/" 
-# validation_folder_path = "../input/dataset2-modified-copy-2/dataset(2) - modified - Copy 2/images/"
-# folder_path = "../input/dataset2-modified-copy-2/dataset(2) - modified - Copy 2/images/" 
-# folder_path = "../input/dataset-1-modified/dataset(1) - modified/images/" 
+
 folder_path = "C:/Users/mk079/OneDrive/Desktop/AI/images/"
 test="C:/Users/mk079/OneDrive/Desktop/AI/images/validation"
-# folder_path = "../input/face-expression-recognition-dataset/images/"
-# validation_folder_path = "../input/face-expression-recognition-dataset/images/"
+
 expression = 'happy'
 plt.style.use('dark_background')
 plt.figure(figsize= (12,12))

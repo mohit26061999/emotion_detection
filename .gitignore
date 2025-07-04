@@ -1,7 +1,0 @@
-# Ignore virtual environment and large system files
-venv/
-*.dll
-*.pyd
-*.lib
-*.exe
-*.keras
