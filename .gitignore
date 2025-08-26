@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Large/binary files
+*.dll
+*.exe
+*.lib
+*.pyd
+*.keras
+*.h5
+*.pt
+*.ckpt
